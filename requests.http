@@ -1,0 +1,111 @@
+# ============================================================
+# Microservice Users  —  http://localhost:3002
+# ============================================================
+
+@usersBaseUrl = http://localhost:3002
+@transactionsBaseUrl = http://localhost:3001
+
+# Set this variable after running the Login request below
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzU1ODMyNDAsImlhdCI6MTc3NTQ5Njg0MCwic3ViIjoiYmI5NThhMjAtNjY1Ny00ZDFiLTkzMTctMzRiMzA3NmJmZTgzIn0.z1KrDaRfjUbodwwAdove_5wJfYk2zZIyeHjd2cLz4ZM
+
+
+### ── Auth ──────────────────────────────────────────────────
+
+# Login
+POST {{usersBaseUrl}}/auth
+Content-Type: application/json
+
+{
+  "user": {
+    "email": "john.doe@example.com",
+    "password": "secret123"
+  }
+}
+
+
+### ── Users ─────────────────────────────────────────────────
+
+# Create user
+POST {{usersBaseUrl}}/users
+Content-Type: application/json
+
+{
+  "first_name": "John",
+  "last_name": "Doe",
+  "email": "john.doe@example.com",
+  "password": "secret123"
+}
+
+
+###
+
+# List all users
+GET {{usersBaseUrl}}/users
+Authorization: Bearer {{token}}
+
+
+###
+
+# Get user by id
+GET {{usersBaseUrl}}/users/:id
+Authorization: Bearer {{token}}
+
+
+###
+
+# Update user by id
+PATCH {{usersBaseUrl}}/users/:id
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "first_name": "Jane",
+  "last_name": "Doe",
+  "email": "jane.doe@example.com",
+  "password": "newpassword123"
+}
+
+
+###
+
+# Delete user by id
+DELETE {{usersBaseUrl}}/users/:id
+Authorization: Bearer {{token}}
+
+
+# ============================================================
+# Microservice Wallet  —  http://localhost:3001
+# ============================================================
+
+### ── Transactions ──────────────────────────────────────────
+
+# Create transaction
+POST {{transactionsBaseUrl}}/transactions
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "type": "CREDIT",
+  "amount": 100
+}
+
+
+###
+
+# List all transactions (no filter)
+GET {{transactionsBaseUrl}}/transactions
+Authorization: Bearer {{token}}
+
+
+###
+
+# List transactions filtered by type
+GET {{transactionsBaseUrl}}/transactions?type=CREDIT
+Authorization: Bearer {{token}}
+
+
+###
+
+# Get balance (consolidated CREDIT / DEBIT summary)
+GET {{transactionsBaseUrl}}/balance
+Authorization: Bearer {{token}}

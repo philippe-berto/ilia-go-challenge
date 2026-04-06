@@ -1,0 +1,97 @@
+services:
+  postgres-transactions:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: transactions
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_transactions_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d transactions"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ilia
+
+  postgres-users:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: users
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_users_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d users"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ilia
+
+  ms-transactions:
+    build:
+      context: ./ms-transactions
+      dockerfile: build/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      POSTGRES_HOST: postgres-transactions
+      POSTGRES_DB: transactions
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DRIVER: postgres
+      POSTGRES_MIGRATION: "true"
+      JWT_SECRET: ILIACHALLENGE
+      ENABLE_CORS: "true"
+      CORS_ALLOW_ORIGINS: "*"
+    depends_on:
+      postgres-transactions:
+        condition: service_healthy
+    networks:
+      - ilia
+
+  ms-users:
+    build:
+      context: ./ms-users
+      dockerfile: build/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      POSTGRES_HOST: postgres-users
+      POSTGRES_DB: users
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DRIVER: postgres
+      POSTGRES_MIGRATION: "true"
+      JWT_SECRET: ILIACHALLENGE
+      JWT_EXPIRATION_HOURS: 24
+      ENABLE_CORS: "true"
+      CORS_ALLOW_ORIGINS: "*"
+    depends_on:
+      postgres-users:
+        condition: service_healthy
+    networks:
+      - ilia
+
+volumes:
+  postgres_transactions_data:
+  postgres_users_data:
+
+networks:
+  ilia:
+    driver: bridge
