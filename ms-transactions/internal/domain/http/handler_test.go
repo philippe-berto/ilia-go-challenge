@@ -200,7 +200,7 @@ func TestHandler_GetBalance(t *testing.T) {
 		require.Equal(t, http.StatusOK, w.Code)
 		var out map[string]float64
 		require.NoError(t, json.NewDecoder(w.Body).Decode(&out))
-		assert.Equal(t, 150.00, out["balance"])
+		assert.Equal(t, 150.00, out["amount"])
 	})
 
 	t.Run("Should return 500 when service returns error", func(t *testing.T) {

@@ -113,5 +113,5 @@ func (h *handler) getBalance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]float64{"balance": balance})
+	json.NewEncoder(w).Encode(map[string]float64{"amount": balance})
 }

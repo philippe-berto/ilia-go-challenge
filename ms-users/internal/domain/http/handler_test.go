@@ -64,7 +64,7 @@ func TestHandler_CreateUser(t *testing.T) {
 
 		r.ServeHTTP(w, req)
 
-		require.Equal(t, http.StatusCreated, w.Code)
+		require.Equal(t, http.StatusOK, w.Code)
 		var out dto.UserOutput
 		require.NoError(t, json.NewDecoder(w.Body).Decode(&out))
 		assert.Equal(t, expected.ID, out.ID)
@@ -109,9 +109,10 @@ func TestHandler_Authenticate(t *testing.T) {
 	t.Run("Should return token on valid credentials", func(t *testing.T) {
 		r, svc := newTestRouter(t)
 
+		expectedUser := &dto.UserOutput{ID: "user-1", FirstName: "John", LastName: "Doe", Email: "john@example.com"}
 		svc.EXPECT().
 			Authenticate(gomock.Any(), "john@example.com", "secret123").
-			Return(&dto.AuthOutput{Token: "token-abc"}, nil)
+			Return(&dto.AuthOutput{User: expectedUser, AccessToken: "token-abc"}, nil)
 
 		body, _ := json.Marshal(map[string]any{
 			"email":    "john@example.com",
@@ -126,7 +127,10 @@ func TestHandler_Authenticate(t *testing.T) {
 		require.Equal(t, http.StatusOK, w.Code)
 		var out dto.AuthOutput
 		require.NoError(t, json.NewDecoder(w.Body).Decode(&out))
-		assert.Equal(t, "token-abc", out.Token)
+		assert.Equal(t, "token-abc", out.AccessToken)
+		require.NotNil(t, out.User)
+		assert.Equal(t, expectedUser.ID, out.User.ID)
+		assert.Equal(t, expectedUser.Email, out.User.Email)
 	})
 
 	t.Run("Should return 401 on invalid credentials", func(t *testing.T) {

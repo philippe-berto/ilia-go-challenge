@@ -175,7 +175,7 @@ func TestService_Authenticate(t *testing.T) {
 		repo.EXPECT().
 			GetUserByEmail(gomock.Any(), "john@example.com").
 			Return(&repository.UserWithPassword{
-				UserOutput:   dto.UserOutput{ID: "user-1"},
+				UserOutput:   dto.UserOutput{ID: "user-1", FirstName: "John", LastName: "Doe", Email: "john@example.com"},
 				PasswordHash: string(hash),
 			}, nil)
 
@@ -185,7 +185,10 @@ func TestService_Authenticate(t *testing.T) {
 
 		out, err := svc.Authenticate(context.Background(), "john@example.com", "secret123")
 		require.NoError(t, err)
-		assert.Equal(t, "token-abc", out.Token)
+		assert.Equal(t, "token-abc", out.AccessToken)
+		require.NotNil(t, out.User)
+		assert.Equal(t, "user-1", out.User.ID)
+		assert.Equal(t, "john@example.com", out.User.Email)
 	})
 
 	t.Run("Should return error when user is not found", func(t *testing.T) {

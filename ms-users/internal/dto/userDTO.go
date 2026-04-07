@@ -8,5 +8,6 @@ type UserOutput struct {
 }
 
 type AuthOutput struct {
-	Token string `json:"token"`
+	User        *UserOutput `json:"user"`
+	AccessToken string      `json:"access_token"`
 }
