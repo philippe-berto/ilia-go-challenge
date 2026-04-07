@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     CHECK (balance >= 0)
 );
 
-CREATE TYPE transaction_type AS ENUM ('credit', 'debit');
+CREATE TYPE transaction_type AS ENUM ('CREDIT', 'DEBIT');
 
 CREATE TABLE IF NOT EXISTS transactions (
     id UUID PRIMARY KEY,
