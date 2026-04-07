@@ -6,7 +6,7 @@
 @transactionsBaseUrl = http://localhost:3001
 
 # Set this variable after running the Login request below
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzU1ODMyNDAsImlhdCI6MTc3NTQ5Njg0MCwic3ViIjoiYmI5NThhMjAtNjY1Ny00ZDFiLTkzMTctMzRiMzA3NmJmZTgzIn0.z1KrDaRfjUbodwwAdove_5wJfYk2zZIyeHjd2cLz4ZM
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzU2NDQ0MTYsImlhdCI6MTc3NTU1ODAxNiwic3ViIjoiZTdkNGEyOTEtMjE5MS00Mjk2LWIxODYtNTNkMDU2MGRlZWI2In0.wBHNZe-NK2W6FQ0YAHYDn2Lubohn5B1iIfdRcVLtVsI
 
 
 ### ── Auth ──────────────────────────────────────────────────
@@ -47,20 +47,20 @@ Authorization: Bearer {{token}}
 ###
 
 # Get user by id
-GET {{usersBaseUrl}}/users/:id
+GET {{usersBaseUrl}}/users/e7d4a291-2191-4296-b186-53d0560deeb6
 Authorization: Bearer {{token}}
 
 
 ###
 
 # Update user by id
-PATCH {{usersBaseUrl}}/users/:id
+PATCH {{usersBaseUrl}}/users/e7d4a291-2191-4296-b186-53d0560deeb6
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "first_name": "Jane",
-  "last_name": "Doe",
+  "first_name": "Philippe",
+  "last_name": "Berto",
   "email": "jane.doe@example.com",
   "password": "newpassword123"
 }
@@ -86,7 +86,7 @@ Authorization: Bearer {{token}}
 
 {
   "type": "CREDIT",
-  "amount": 100
+  "amount": 45.52
 }
 
 
@@ -100,7 +100,7 @@ Authorization: Bearer {{token}}
 ###
 
 # List transactions filtered by type
-GET {{transactionsBaseUrl}}/transactions?type=CREDIT
+GET {{transactionsBaseUrl}}/transactions?type=DEBIT
 Authorization: Bearer {{token}}
 
 

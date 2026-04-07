@@ -1,0 +1,147 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-ms-users:
+    name: Unit Tests / ms-users
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: ms-users/go.sum
+
+      - name: Install mockgen
+        run: go install go.uber.org/mock/mockgen@v0.6.0
+
+      - name: Generate mocks
+        working-directory: ms-users
+        run: go generate -tags=tool mockgen.go
+
+      - name: Run unit tests
+        working-directory: ms-users
+        run: go test -count=1 -vet=all ./...
+
+  test-ms-transactions:
+    name: Unit Tests / ms-transactions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: ms-transactions/go.sum
+
+      - name: Install mockgen
+        run: go install go.uber.org/mock/mockgen@v0.6.0
+
+      - name: Generate mocks
+        working-directory: ms-transactions
+        run: go generate -tags=tool mockgen.go
+
+      - name: Run unit tests
+        working-directory: ms-transactions
+        run: go test -count=1 -vet=all ./...
+
+  integration-ms-users:
+    name: Integration Tests / ms-users
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: users
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d users"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: ms-users/go.sum
+
+      - name: Install mockgen
+        run: go install go.uber.org/mock/mockgen@v0.6.0
+
+      - name: Generate mocks
+        working-directory: ms-users
+        run: go generate -tags=tool mockgen.go
+
+      - name: Run integration tests
+        working-directory: ms-users
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: users
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          JWT_SECRET: ILIACHALLENGE
+        run: go test -count=1 -vet=all -tags=integration ./...
+
+  integration-ms-transactions:
+    name: Integration Tests / ms-transactions
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: transactions
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d transactions"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: ms-transactions/go.sum
+
+      - name: Install mockgen and migrate CLI
+        run: |
+          go install go.uber.org/mock/mockgen@v0.6.0
+          go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+      - name: Generate mocks
+        working-directory: ms-transactions
+        run: go generate -tags=tool mockgen.go
+
+      - name: Run migrations
+        run: migrate -path ms-transactions/migrations -database "postgres://postgres:postgres@localhost:5432/transactions?sslmode=disable" up
+
+      - name: Run integration tests
+        working-directory: ms-transactions
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: transactions
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          JWT_SECRET: ILIACHALLENGE
+        run: go test -count=1 -vet=all -tags=integration ./...

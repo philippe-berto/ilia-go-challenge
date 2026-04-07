@@ -16,6 +16,7 @@ const (
 	createTransaction     = "createTransaction"
 	getTransactionsByUser = "getTransactionsByUser"
 	getTransactionsByType = "getTransactionsByType"
+	createAccount         = "createAccount"
 	getBalance            = "getBalance"
 	setBalance            = "setBalance"
 )
@@ -50,6 +51,11 @@ func (r *Repository) CreateTransaction(ctx context.Context, transaction *transac
 			}
 		}
 	}()
+
+	_, err = tx.StmtContext(ctx, r.statements[createAccount].Stmt).ExecContext(ctx, transaction.UserID)
+	if err != nil {
+		return nil, err
+	}
 
 	amount := transaction.Amount
 	if transaction.Type == "debit" {

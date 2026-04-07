@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
 	"transactions/internal/domain/transaction"
 	"transactions/internal/dto"
 	"transactions/internal/utils/jwt"
@@ -53,7 +54,7 @@ func (h *handler) createTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := transaction.New(userID, transaction.TransactionType(input.Type), input.Amount)
+	t, err := transaction.New(userID, transaction.TransactionType(strings.ToLower(input.Type)), input.Amount)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

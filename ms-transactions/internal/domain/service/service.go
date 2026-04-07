@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"log/slog"
+	"strings"
 	"transactions/internal/domain/transaction"
 	"transactions/internal/dto"
 )
@@ -44,7 +45,7 @@ func (s *Service) GetTransactionsByUser(ctx context.Context, userID string) ([]*
 }
 
 func (s *Service) GetTransactionsByType(ctx context.Context, userID, transactionType string) ([]*dto.TransactionOutput, error) {
-	transactions, err := s.repo.GetTransactionsByType(ctx, userID, transactionType)
+	transactions, err := s.repo.GetTransactionsByType(ctx, userID, strings.ToLower(transactionType))
 	if err != nil {
 		s.logger.Error("failed to get transactions by type", "error", err)
 		return nil, err
