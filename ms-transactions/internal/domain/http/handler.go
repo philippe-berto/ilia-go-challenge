@@ -3,9 +3,11 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strings"
+	"transactions/internal/domain/repository"
 	"transactions/internal/domain/transaction"
 	"transactions/internal/dto"
 	"transactions/internal/utils/jwt"
@@ -49,13 +51,15 @@ func (h *handler) createTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	input.Type = strings.ToUpper(input.Type)
+
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	t, err := transaction.New(input.ID, userID, transaction.TransactionType(strings.ToLower(input.Type)), input.Amount)
+	t, err := transaction.New(input.ID, userID, transaction.TransactionType(input.Type), input.Amount)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -63,6 +67,10 @@ func (h *handler) createTransaction(w http.ResponseWriter, r *http.Request) {
 
 	output, err := h.s.CreateTransaction(r.Context(), t)
 	if err != nil {
+		if errors.Is(err, repository.ErrInsufficientBalance) {
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			return
+		}
 		h.logger.Error("failed to create transaction", "error", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
@@ -83,7 +91,7 @@ func (h *handler) getTransactions(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	if transactionType := r.URL.Query().Get("type"); transactionType != "" {
-		result, err = h.s.GetTransactionsByType(r.Context(), userID, transactionType)
+		result, err = h.s.GetTransactionsByType(r.Context(), userID, strings.ToUpper(transactionType))
 	} else {
 		result, err = h.s.GetTransactionsByUser(r.Context(), userID)
 	}

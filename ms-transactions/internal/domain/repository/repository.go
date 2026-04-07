@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"errors"
 	"log/slog"
 	"transactions/internal/domain/transaction"
 	"transactions/internal/dto"
@@ -35,6 +35,8 @@ func New(db *postgres.Client, logger *slog.Logger) (*Repository, error) {
 		statements: map[string]*sqlx.Stmt{},
 	}, nil
 }
+
+var ErrInsufficientBalance = errors.New("insufficient balance")
 
 func (r *Repository) CreateTransaction(ctx context.Context, transaction *transaction.Transaction) (*dto.TransactionOutput, error) {
 	if err := r.ensureStatements(); err != nil {
@@ -79,7 +81,7 @@ func (r *Repository) CreateTransaction(ctx context.Context, transaction *transac
 	}
 
 	amount := transaction.Amount
-	if transaction.Type == "debit" {
+	if transaction.Type == "DEBIT" {
 		amount = -amount
 	}
 
@@ -92,7 +94,7 @@ func (r *Repository) CreateTransaction(ctx context.Context, transaction *transac
 		return nil, err
 	}
 	if rows == 0 {
-		err = fmt.Errorf("insufficient balance")
+		err = ErrInsufficientBalance
 		return nil, err
 	}
 

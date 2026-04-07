@@ -21,8 +21,8 @@ type (
 var validate = validator.New()
 
 const (
-	Credit TransactionType = "credit"
-	Debit  TransactionType = "debit"
+	Credit TransactionType = "CREDIT"
+	Debit  TransactionType = "DEBIT"
 )
 
 func (t TransactionType) IsValid() bool {
