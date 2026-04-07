@@ -17,7 +17,7 @@ Content-Type: application/json
 
 {
   "user": {
-    "email": "john.doe@example.com",
+    "email": "jane.doe@example.com",
     "password": "secret123"
   }
 }
@@ -85,9 +85,9 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "ID": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "ID": "00cf48cb-0ab1-4541-b740-8402f25a83ee",
   "type": "DEBIT",
-  "amount": 3.17
+  "amount": 100.67
 }
 
 
@@ -101,7 +101,7 @@ Authorization: Bearer {{token}}
 ###
 
 # List transactions filtered by type
-GET {{transactionsBaseUrl}}/transactions?type=DEBIT
+GET {{transactionsBaseUrl}}/transactions?type=debit
 Authorization: Bearer {{token}}
 
 

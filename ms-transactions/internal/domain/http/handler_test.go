@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"transactions/internal/domain/repository"
 	"transactions/internal/domain/transaction"
 	"transactions/internal/dto"
 	"transactions/internal/utils/middleware"
@@ -55,7 +56,7 @@ func TestHandler_CreateTransaction(t *testing.T) {
 		expected := &dto.TransactionOutput{
 			ID:     testTxID,
 			UserID: testUserID,
-			Type:   "credit",
+			Type:   "CREDIT",
 			Amount: 100.00,
 		}
 
@@ -68,7 +69,7 @@ func TestHandler_CreateTransaction(t *testing.T) {
 			}).
 			Return(expected, nil)
 
-		body, _ := json.Marshal(map[string]any{"id": testTxID, "type": "credit", "amount": 100.00})
+		body, _ := json.Marshal(map[string]any{"id": testTxID, "type": "CREDIT", "amount": 100.00})
 		req := httptest.NewRequest(http.MethodPost, "/transactions", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -96,7 +97,7 @@ func TestHandler_CreateTransaction(t *testing.T) {
 	t.Run("Should return 400 when transaction id is not a valid UUID v4", func(t *testing.T) {
 		r, _ := newTestRouter(t)
 
-		body, _ := json.Marshal(map[string]any{"id": "not-a-uuid", "type": "credit", "amount": 50.00})
+		body, _ := json.Marshal(map[string]any{"id": "not-a-uuid", "type": "CREDIT", "amount": 50.00})
 		req := httptest.NewRequest(http.MethodPost, "/transactions", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -109,7 +110,7 @@ func TestHandler_CreateTransaction(t *testing.T) {
 	t.Run("Should return 400 when transaction type is invalid", func(t *testing.T) {
 		r, _ := newTestRouter(t)
 
-		body, _ := json.Marshal(map[string]any{"id": testTxID, "type": "unknown", "amount": 50.00})
+		body, _ := json.Marshal(map[string]any{"id": testTxID, "type": "UNKNOWN", "amount": 50.00})
 		req := httptest.NewRequest(http.MethodPost, "/transactions", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -119,14 +120,31 @@ func TestHandler_CreateTransaction(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("Should return 500 when service returns error", func(t *testing.T) {
+	t.Run("Should return 422 when balance is insufficient", func(t *testing.T) {
 		r, svc := newTestRouter(t)
 
 		svc.EXPECT().
 			CreateTransaction(gomock.Any(), gomock.Any()).
-			Return(nil, errors.New("insufficient balance"))
+			Return(nil, repository.ErrInsufficientBalance)
 
-		body, _ := json.Marshal(map[string]any{"id": testTxID, "type": "debit", "amount": 999.00})
+		body, _ := json.Marshal(map[string]any{"id": testTxID, "type": "DEBIT", "amount": 999.00})
+		req := httptest.NewRequest(http.MethodPost, "/transactions", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnprocessableEntity, w.Code)
+	})
+
+	t.Run("Should return 500 when service returns unexpected error", func(t *testing.T) {
+		r, svc := newTestRouter(t)
+
+		svc.EXPECT().
+			CreateTransaction(gomock.Any(), gomock.Any()).
+			Return(nil, errors.New("db connection lost"))
+
+		body, _ := json.Marshal(map[string]any{"id": testTxID, "type": "DEBIT", "amount": 999.00})
 		req := httptest.NewRequest(http.MethodPost, "/transactions", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -142,8 +160,8 @@ func TestHandler_GetTransactions(t *testing.T) {
 		r, svc := newTestRouter(t)
 
 		expected := []*dto.TransactionOutput{
-			{ID: "tx-1", UserID: testUserID, Type: "credit", Amount: 100.00},
-			{ID: "tx-2", UserID: testUserID, Type: "debit", Amount: 30.00},
+			{ID: "tx-1", UserID: testUserID, Type: "CREDIT", Amount: 100.00},
+			{ID: "tx-2", UserID: testUserID, Type: "DEBIT", Amount: 30.00},
 		}
 
 		svc.EXPECT().
@@ -165,14 +183,14 @@ func TestHandler_GetTransactions(t *testing.T) {
 		r, svc := newTestRouter(t)
 
 		expected := []*dto.TransactionOutput{
-			{ID: "tx-1", UserID: testUserID, Type: "credit", Amount: 100.00},
+			{ID: "tx-1", UserID: testUserID, Type: "CREDIT", Amount: 100.00},
 		}
 
 		svc.EXPECT().
-			GetTransactionsByType(gomock.Any(), testUserID, "credit").
+			GetTransactionsByType(gomock.Any(), testUserID, "CREDIT").
 			Return(expected, nil)
 
-		req := httptest.NewRequest(http.MethodGet, "/transactions?type=credit", nil)
+		req := httptest.NewRequest(http.MethodGet, "/transactions?type=CREDIT", nil)
 		w := httptest.NewRecorder()
 
 		r.ServeHTTP(w, req)

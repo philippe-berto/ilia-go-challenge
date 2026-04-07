@@ -2,10 +2,10 @@ package service
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"os"
 	"testing"
+	"transactions/internal/domain/repository"
 	"transactions/internal/domain/transaction"
 	"transactions/internal/dto"
 	"transactions/mocks"
@@ -32,7 +32,7 @@ func TestService_CreateTransaction(t *testing.T) {
 		expected := &dto.TransactionOutput{
 			ID:     txID,
 			UserID: userID,
-			Type:   "credit",
+			Type:   "CREDIT",
 			Amount: 100.00,
 		}
 
@@ -67,7 +67,7 @@ func TestService_CreateTransaction(t *testing.T) {
 				Type:   transaction.Debit,
 				Amount: 200.00,
 			}).
-			Return(nil, errors.New("insufficient balance"))
+			Return(nil, repository.ErrInsufficientBalance)
 
 		_, err := svc.CreateTransaction(context.Background(), &transaction.Transaction{
 			ID:     txID,
@@ -75,7 +75,7 @@ func TestService_CreateTransaction(t *testing.T) {
 			Type:   transaction.Debit,
 			Amount: 200.00,
 		})
-		require.EqualError(t, err, "insufficient balance")
+		require.ErrorIs(t, err, repository.ErrInsufficientBalance)
 	})
 }
 
@@ -85,8 +85,8 @@ func TestService_GetTransactions(t *testing.T) {
 		userID := "user-123"
 
 		expected := []*dto.TransactionOutput{
-			{ID: "tx-1", UserID: userID, Type: "credit", Amount: 100.00},
-			{ID: "tx-2", UserID: userID, Type: "credit", Amount: 200.00},
+			{ID: "tx-1", UserID: userID, Type: "CREDIT", Amount: 100.00},
+			{ID: "tx-2", UserID: userID, Type: "CREDIT", Amount: 200.00},
 		}
 
 		repo.EXPECT().
@@ -103,11 +103,11 @@ func TestService_GetTransactions(t *testing.T) {
 		userID := "user-123"
 
 		expected := []*dto.TransactionOutput{
-			{ID: "tx-1", UserID: userID, Type: "credit", Amount: 100.00},
+			{ID: "tx-1", UserID: userID, Type: "CREDIT", Amount: 100.00},
 		}
 
 		repo.EXPECT().
-			GetTransactionsByType(gomock.Any(), userID, "credit").
+			GetTransactionsByType(gomock.Any(), userID, "CREDIT").
 			Return(expected, nil)
 
 		result, err := svc.GetTransactionsByType(context.Background(), userID, "CREDIT")
