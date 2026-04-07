@@ -14,6 +14,7 @@ import (
 
 const (
 	createTransaction     = "createTransaction"
+	getTransactionByID    = "getTransactionByID"
 	getTransactionsByUser = "getTransactionsByUser"
 	getTransactionsByType = "getTransactionsByType"
 	createAccount         = "createAccount"
@@ -57,6 +58,26 @@ func (r *Repository) CreateTransaction(ctx context.Context, transaction *transac
 		return nil, err
 	}
 
+	var output dto.TransactionOutput
+	err = tx.StmtContext(ctx, r.statements[createTransaction].Stmt).
+		QueryRowContext(ctx, transaction.ID, transaction.UserID, transaction.Type, transaction.Amount).
+		Scan(&output.ID, &output.UserID, &output.Type, &output.Amount)
+	if err == sql.ErrNoRows {
+		// Duplicate id: return the original transaction without modifying the balance.
+		err = nil
+		var existing dto.TransactionOutput
+		fetchErr := r.statements[getTransactionByID].QueryRowContext(ctx, transaction.ID).
+			Scan(&existing.ID, &existing.UserID, &existing.Type, &existing.Amount)
+		if fetchErr != nil {
+			return nil, fetchErr
+		}
+		_ = tx.Rollback()
+		return &existing, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	amount := transaction.Amount
 	if transaction.Type == "debit" {
 		amount = -amount
@@ -72,14 +93,6 @@ func (r *Repository) CreateTransaction(ctx context.Context, transaction *transac
 	}
 	if rows == 0 {
 		err = fmt.Errorf("insufficient balance")
-		return nil, err
-	}
-
-	var output dto.TransactionOutput
-	err = tx.StmtContext(ctx, r.statements[createTransaction].Stmt).
-		QueryRowContext(ctx, transaction.UserID, transaction.Type, transaction.Amount).
-		Scan(&output.ID, &output.UserID, &output.Type, &output.Amount)
-	if err != nil {
 		return nil, err
 	}
 

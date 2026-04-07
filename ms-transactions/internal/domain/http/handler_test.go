@@ -21,7 +21,10 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-const testUserID = "user-abc-123"
+const (
+	testUserID = "user-abc-123"
+	testTxID   = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+)
 
 func newTestRouter(t *testing.T) (chi.Router, *mocks.MockService) {
 	t.Helper()
@@ -50,7 +53,7 @@ func TestHandler_CreateTransaction(t *testing.T) {
 		r, svc := newTestRouter(t)
 
 		expected := &dto.TransactionOutput{
-			ID:     "tx-1",
+			ID:     testTxID,
 			UserID: testUserID,
 			Type:   "credit",
 			Amount: 100.00,
@@ -58,13 +61,14 @@ func TestHandler_CreateTransaction(t *testing.T) {
 
 		svc.EXPECT().
 			CreateTransaction(gomock.Any(), &transaction.Transaction{
+				ID:     testTxID,
 				UserID: testUserID,
 				Type:   transaction.Credit,
 				Amount: 100.00,
 			}).
 			Return(expected, nil)
 
-		body, _ := json.Marshal(map[string]any{"type": "credit", "amount": 100.00})
+		body, _ := json.Marshal(map[string]any{"id": testTxID, "type": "credit", "amount": 100.00})
 		req := httptest.NewRequest(http.MethodPost, "/transactions", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -89,10 +93,23 @@ func TestHandler_CreateTransaction(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
+	t.Run("Should return 400 when transaction id is not a valid UUID v4", func(t *testing.T) {
+		r, _ := newTestRouter(t)
+
+		body, _ := json.Marshal(map[string]any{"id": "not-a-uuid", "type": "credit", "amount": 50.00})
+		req := httptest.NewRequest(http.MethodPost, "/transactions", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
 	t.Run("Should return 400 when transaction type is invalid", func(t *testing.T) {
 		r, _ := newTestRouter(t)
 
-		body, _ := json.Marshal(map[string]any{"type": "unknown", "amount": 50.00})
+		body, _ := json.Marshal(map[string]any{"id": testTxID, "type": "unknown", "amount": 50.00})
 		req := httptest.NewRequest(http.MethodPost, "/transactions", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
@@ -109,7 +126,7 @@ func TestHandler_CreateTransaction(t *testing.T) {
 			CreateTransaction(gomock.Any(), gomock.Any()).
 			Return(nil, errors.New("insufficient balance"))
 
-		body, _ := json.Marshal(map[string]any{"type": "debit", "amount": 999.00})
+		body, _ := json.Marshal(map[string]any{"id": testTxID, "type": "debit", "amount": 999.00})
 		req := httptest.NewRequest(http.MethodPost, "/transactions", bytes.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()

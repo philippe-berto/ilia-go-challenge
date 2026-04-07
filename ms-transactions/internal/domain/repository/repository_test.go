@@ -67,6 +67,7 @@ func TestIntegration_CreateTransaction(t *testing.T) {
 		t.Cleanup(func() { cleanupUser(t, repo, userID) })
 
 		out, err := repo.CreateTransaction(context.Background(), &transaction.Transaction{
+			ID:     uuid.New().String(),
 			UserID: userID,
 			Type:   transaction.Credit,
 			Amount: 100.00,
@@ -83,6 +84,7 @@ func TestIntegration_CreateTransaction(t *testing.T) {
 		t.Cleanup(func() { cleanupUser(t, repo, userID) })
 
 		_, err := repo.CreateTransaction(context.Background(), &transaction.Transaction{
+			ID:     uuid.New().String(),
 			UserID: userID,
 			Type:   transaction.Credit,
 			Amount: 50.00,
@@ -90,11 +92,47 @@ func TestIntegration_CreateTransaction(t *testing.T) {
 		require.NoError(t, err, "setup credit failed")
 
 		_, err = repo.CreateTransaction(context.Background(), &transaction.Transaction{
+			ID:     uuid.New().String(),
 			UserID: userID,
 			Type:   transaction.Debit,
 			Amount: 200.00,
 		})
 		require.EqualError(t, err, "insufficient balance")
+	})
+}
+
+func TestIntegration_CreateTransaction_Idempotency(t *testing.T) {
+	t.Run("Should return same response and insert only one row for duplicate transaction id", func(t *testing.T) {
+		repo := newTestRepo(t)
+		userID := uuid.New().String()
+		txID := uuid.New().String()
+		t.Cleanup(func() { cleanupUser(t, repo, userID) })
+
+		tx := &transaction.Transaction{
+			ID:     txID,
+			UserID: userID,
+			Type:   transaction.Credit,
+			Amount: 100.00,
+		}
+
+		out1, err := repo.CreateTransaction(context.Background(), tx)
+		require.NoError(t, err)
+
+		out2, err := repo.CreateTransaction(context.Background(), tx)
+		require.NoError(t, err)
+
+		assert.Equal(t, out1.ID, out2.ID)
+		assert.Equal(t, out1.UserID, out2.UserID)
+		assert.Equal(t, out1.Type, out2.Type)
+		assert.Equal(t, out1.Amount, out2.Amount)
+
+		txs, err := repo.GetTransactionsByUser(context.Background(), userID)
+		require.NoError(t, err)
+		assert.Len(t, txs, 1)
+
+		balance, err := repo.GetBalance(context.Background(), userID)
+		require.NoError(t, err)
+		assert.Equal(t, 100.00, balance)
 	})
 }
 
@@ -107,6 +145,7 @@ func TestIntegration_GetTransactions(t *testing.T) {
 		amounts := []float64{100.00, 200.00, 50.00}
 		for _, a := range amounts {
 			_, err := repo.CreateTransaction(context.Background(), &transaction.Transaction{
+				ID:     uuid.New().String(),
 				UserID: userID,
 				Type:   transaction.Credit,
 				Amount: a,
@@ -126,6 +165,7 @@ func TestIntegration_GetTransactions(t *testing.T) {
 
 		for _, a := range []float64{300.00, 200.00} {
 			_, err := repo.CreateTransaction(context.Background(), &transaction.Transaction{
+				ID:     uuid.New().String(),
 				UserID: userID,
 				Type:   transaction.Credit,
 				Amount: a,
@@ -144,6 +184,7 @@ func TestIntegration_GetTransactions(t *testing.T) {
 		t.Cleanup(func() { cleanupUser(t, repo, userID) })
 
 		_, err := repo.CreateTransaction(context.Background(), &transaction.Transaction{
+			ID:     uuid.New().String(),
 			UserID: userID,
 			Type:   transaction.Credit,
 			Amount: 300.00,
@@ -151,6 +192,7 @@ func TestIntegration_GetTransactions(t *testing.T) {
 		require.NoError(t, err, "failed to create credit")
 
 		_, err = repo.CreateTransaction(context.Background(), &transaction.Transaction{
+			ID:     uuid.New().String(),
 			UserID: userID,
 			Type:   transaction.Debit,
 			Amount: 100.00,
@@ -170,6 +212,7 @@ func TestIntegration_GetBalance(t *testing.T) {
 		t.Cleanup(func() { cleanupUser(t, repo, userID) })
 
 		_, err := repo.CreateTransaction(context.Background(), &transaction.Transaction{
+			ID:     uuid.New().String(),
 			UserID: userID,
 			Type:   transaction.Credit,
 			Amount: 200.00,
@@ -177,6 +220,7 @@ func TestIntegration_GetBalance(t *testing.T) {
 		require.NoError(t, err, "failed to create credit")
 
 		_, err = repo.CreateTransaction(context.Background(), &transaction.Transaction{
+			ID:     uuid.New().String(),
 			UserID: userID,
 			Type:   transaction.Debit,
 			Amount: 50.00,

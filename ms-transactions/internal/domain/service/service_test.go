@@ -27,9 +27,10 @@ func TestService_CreateTransaction(t *testing.T) {
 	t.Run("Should create a credit transaction successfully", func(t *testing.T) {
 		svc, repo := newTestService(t)
 		userID := "user-123"
+		txID := "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 
 		expected := &dto.TransactionOutput{
-			ID:     "tx-1",
+			ID:     txID,
 			UserID: userID,
 			Type:   "credit",
 			Amount: 100.00,
@@ -37,6 +38,7 @@ func TestService_CreateTransaction(t *testing.T) {
 
 		repo.EXPECT().
 			CreateTransaction(gomock.Any(), &transaction.Transaction{
+				ID:     txID,
 				UserID: userID,
 				Type:   transaction.Credit,
 				Amount: 100.00,
@@ -44,6 +46,7 @@ func TestService_CreateTransaction(t *testing.T) {
 			Return(expected, nil)
 
 		out, err := svc.CreateTransaction(context.Background(), &transaction.Transaction{
+			ID:     txID,
 			UserID: userID,
 			Type:   transaction.Credit,
 			Amount: 100.00,
@@ -55,9 +58,11 @@ func TestService_CreateTransaction(t *testing.T) {
 	t.Run("Should return error when balance is insufficient", func(t *testing.T) {
 		svc, repo := newTestService(t)
 		userID := "user-123"
+		txID := "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 
 		repo.EXPECT().
 			CreateTransaction(gomock.Any(), &transaction.Transaction{
+				ID:     txID,
 				UserID: userID,
 				Type:   transaction.Debit,
 				Amount: 200.00,
@@ -65,6 +70,7 @@ func TestService_CreateTransaction(t *testing.T) {
 			Return(nil, errors.New("insufficient balance"))
 
 		_, err := svc.CreateTransaction(context.Background(), &transaction.Transaction{
+			ID:     txID,
 			UserID: userID,
 			Type:   transaction.Debit,
 			Amount: 200.00,

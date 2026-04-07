@@ -20,9 +20,18 @@ var statementsList = []statementsItem{
 	{
 		name: "createTransaction",
 		query: `
-    INSERT INTO transactions (user_id, type, amount)
-    VALUES ($1, $2, $3)
+    INSERT INTO transactions (id, user_id, type, amount)
+    VALUES ($1, $2, $3, $4)
+    ON CONFLICT (id) DO NOTHING
     RETURNING id, user_id, type, amount
+    `,
+	},
+	{
+		name: "getTransactionByID",
+		query: `
+    SELECT id, user_id, type, amount
+    FROM transactions
+    WHERE id = $1
     `,
 	},
 	{
