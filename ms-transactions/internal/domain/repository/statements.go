@@ -28,16 +28,26 @@ var statementsList = []statementsItem{
 	{
 		name: "getTransactionsByUser",
 		query: `
-    SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC
+    SELECT id, user_id, type, amount 
+		FROM transactions 
+		WHERE user_id = $1 
+		ORDER BY created_at DESC
     `,
 	},
 	{
 		name: "getTransactionsByType",
 		query: `
-    SELECT * FROM transactions
+    SELECT id, user_id, type, amount 
+		FROM transactions
     WHERE user_id = $1 AND type = $2
     ORDER BY created_at DESC
     `,
+	},
+	{
+		name: "createAccount",
+		query: `
+		INSERT INTO accounts (user_id) VALUES ($1) ON CONFLICT DO NOTHING
+	`,
 	},
 	{
 		name: "getBalance",
