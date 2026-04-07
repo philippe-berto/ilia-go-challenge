@@ -106,5 +106,8 @@ func (s *Service) Authenticate(ctx context.Context, email, password string) (*dt
 		return nil, err
 	}
 
-	return &dto.AuthOutput{Token: token}, nil
+	return &dto.AuthOutput{
+		User:        &u.UserOutput,
+		AccessToken: token,
+	}, nil
 }

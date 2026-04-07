@@ -1,19 +1,70 @@
-# ília - Code Challenge NodeJS
+# Project Instructions
+
+### Running the services
+
+The microservices can be ran with docker compose
+
+```shell
+docker compose up -d
+```
+
+ms-transactions runs on PORT 3001  
+ms-users runs on PORT 3002
+
+### Development
+
+#### Generating mocks
+
+Mocks are required for unit tests. To regenerate them after changing any interface:
+
+```shell
+make mock-users
+make mock-transactions
+```
+
+#### Running tests
+
+The test targets regenerate mocks automatically before running. Unit tests run without any external dependency:
+
+```shell
+make test-transactions
+make test-users
+```
+
+Integration tests require the databases to be running (`docker compose up -d`):
+
+```shell
+make test-integration-transactions
+make test-integration-users
+```
+
+#### Migrations
+
+Migration files live in `ms-transactions/migrations/` and `ms-users/migrations/`. Each migration has an `up` and `down` SQL file following the `golang-migrate` naming convention (`000001_name.up.sql` / `000001_name.down.sql`).
+
+**With Docker Compose** — migrations run automatically on startup.
+
+# ília - Code Challenge Go
+
 **English**
+
 ##### Before we start ⚠️
+
 **Please create a fork from this repository**
 
 ## The Challenge:
+
 One of the ília Digital verticals is Financial and to level your knowledge we will do a Basic Financial Application and for that we divided this Challenge in 2 Parts.
 
-The first part is mandatory, which is to create a Wallet microservice to store the users' transactions, the second part is optional (*for Seniors, it's mandatory*) which is to create a Users Microservice with integration between the two microservices (Wallet and Users), using internal communications between them, that can be done in any of the following strategies: gRPC, REST, Kafka or via Messaging Queues and this communication must have a different security of the external application (JWT, SSL, ...), **Development in javascript (Node) is required.**
+The first part is mandatory, which is to create a Wallet microservice to store the users' transactions, the second part is optional (_for Seniors, it's mandatory_) which is to create a Users Microservice with integration between the two microservices (Wallet and Users), using internal communications between them, that can be done in any of the following strategies: gRPC, REST, Kafka or via Messaging Queues and this communication must have a different security of the external application (JWT, SSL, ...), **Development in javascript (Node) is required.**
 
 ![diagram](diagram.png)
 
 ### General Instructions:
+
 ## Part 1 - Wallet Microservice
 
-This microservice must be a digital Wallet where the user transactions will be stored 
+This microservice must be a digital Wallet where the user transactions will be stored
 
 ### The Application must have
 
@@ -22,7 +73,7 @@ This microservice must be a digital Wallet where the user transactions will be s
     - This Microservice must receive HTTP Request.
     - Have a dedicated database (Postgres, MySQL, Mongo, DynamoDB, ...).
     - JWT authentication on all routes (endpoints) the PrivateKey must be ILIACHALLENGE (passed by env var).
-    - Configure the Microservice port to 3001. 
+    - Configure the Microservice port to 3001.
     - Gitflow applied with Code Review in each step, open a feature/branch, create at least one pull request and merge it with Main(master deprecated), this step is important to simulate a team work and not just a commit.
 
 ## Part 2 - Microservice Users and Wallet Integration
@@ -31,10 +82,10 @@ This microservice must be a digital Wallet where the user transactions will be s
 
     - Project setup documentation (readme.md).
     - Application and Database running on a container (Docker, ...).
-    - This Microservice must receive HTTP Request.   
+    - This Microservice must receive HTTP Request.
     - Have a dedicated database(Postgres, MySQL, Mongo, DynamoDB...), you may use an Auth service like AWS Cognito.
     - JWT authentication on all routes (endpoints) the PrivateKey must be ILIACHALLENGE (passed by env var).
-    - Set the Microservice port to 3002. 
+    - Set the Microservice port to 3002.
     - Gitflow applied with Code Review in each step, open a feature/branch, create at least one pull request and merge it with Main(master deprecated), this step is important to simulate a teamwork and not just a commit.
     - Internal Communication Security (JWT, SSL, ...), if it is JWT the PrivateKey must be ILIACHALLENGE_INTERNAL (passed by env var).
     - Communication between Microservices using any of the following: gRPC, REST, Kafka or via Messaging Queues (update your readme with the instructions to run if using a Docker/Container environment).
@@ -50,7 +101,7 @@ You may implement the solution using React, Vue, or Angular, following the requi
 ### Before you start ⚠️
 
 - **Create a separate folder for the Frontend project**
-- Frontend must be built in **Typescript**.  
+- Frontend must be built in **Typescript**.
 - The goal is to deliver a production-like UI that consumes the backend services:
   - Wallet Service (port **3001**)
   - Users Service (port **3002**, optional but mandatory for Senior)
@@ -67,12 +118,14 @@ You will build a **web application** that allows a user to:
 
 ### Design Guidelines
 
-No visual prototype or UI mockups will be provided for this challenge on purpose. This is intentional so we can evaluate your product sense, design judgment, and ability to translate business requirements into a coherent user experience. You should focus on creating a clean, modern, and intuitive interface that prioritizes usability and clarity of financial information. Pay special attention to information hierarchy (for example, making balance visibility prominent), form usability and validation, transaction readability, and clear feedback for system states such as loading, success, and errors. Consistency in layout, spacing, typography, and component reuse is important, as well as responsiveness and accessibility basics. *We are not evaluating graphic design skills*, but rather your ability to craft a professional, production-ready UI that engineers and users would find reliable and easy to use.
+No visual prototype or UI mockups will be provided for this challenge on purpose. This is intentional so we can evaluate your product sense, design judgment, and ability to translate business requirements into a coherent user experience. You should focus on creating a clean, modern, and intuitive interface that prioritizes usability and clarity of financial information. Pay special attention to information hierarchy (for example, making balance visibility prominent), form usability and validation, transaction readability, and clear feedback for system states such as loading, success, and errors. Consistency in layout, spacing, typography, and component reuse is important, as well as responsiveness and accessibility basics. _We are not evaluating graphic design skills_, but rather your ability to craft a professional, production-ready UI that engineers and users would find reliable and easy to use.
 
 Feel free to leverage on any opensource components library.
 
-### Requirements 
+### Requirements
+
 This frontend should reflect real-world practices:
+
 - secure JWT handling
 - clean UX flows
 - robust API integration
@@ -84,6 +137,5 @@ This frontend should reflect real-world practices:
 #### In the end, send us your fork repo updated. As soon as you finish, please let us know.
 
 #### We are available to answer any questions.
-
 
 Happy coding! 🤓
