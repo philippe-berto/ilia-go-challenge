@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS accounts (
 CREATE TYPE transaction_type AS ENUM ('credit', 'debit');
 
 CREATE TABLE IF NOT EXISTS transactions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+    id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES accounts (user_id),
     type transaction_type NOT NULL,
     amount NUMERIC(15, 2) NOT NULL CHECK (amount > 0),

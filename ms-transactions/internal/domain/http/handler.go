@@ -40,6 +40,7 @@ func Register(router chi.Router, service Service, logger *slog.Logger, jwtClient
 
 func (h *handler) createTransaction(w http.ResponseWriter, r *http.Request) {
 	var input struct {
+		ID     string  `json:"id"`
 		Type   string  `json:"type"`
 		Amount float64 `json:"amount"`
 	}
@@ -54,7 +55,7 @@ func (h *handler) createTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := transaction.New(userID, transaction.TransactionType(strings.ToLower(input.Type)), input.Amount)
+	t, err := transaction.New(input.ID, userID, transaction.TransactionType(strings.ToLower(input.Type)), input.Amount)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
