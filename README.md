@@ -15,7 +15,7 @@ ms-users runs on PORT 3002
 
 #### Generating mocks
 
-Mocks are required for unit tests. To regenerate them after changing any interface:
+Mocks are required for unit tests. To regenerate them after changing any interface run:
 
 ```shell
 make mock-users
